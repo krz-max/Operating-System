@@ -1,6 +1,7 @@
 # Operating-System
 [NYCU 2023 Fall] Operating System
-Prof: [Chun-Feng Wu](https://www.cs.nycu.edu.tw/members/detail/cfwu417)
+
+Professor: [Chun-Feng Wu](https://www.cs.nycu.edu.tw/members/detail/cfwu417)
 
 * You can see the homework report for more details.
 

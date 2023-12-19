@@ -79,7 +79,11 @@ static void get_system_info(unsigned int info_mask, char *output_buffer)
     int hostname_length = snprintf(hostname, 64, utsname_info->nodename);
     int current_logo_row = 0;
     
-    snprintf(output_buffer, BUF_SIZE, "                   %s\n%s------\n", utsname_info->nodename, logo[current_logo_row++]);
+    snprintf(output_buffer, BUF_SIZE, "                   %s\n%s", hostname, logo[current_logo_row++]);
+    for(size_t i = 0; i < hostname_length; i++){
+        strcat(output_buffer, "-");
+    }
+    strcat(output_buffer, "\n");
 
     if (mask_info & KFETCH_RELEASE) {
         pr_info("Release information\n");
@@ -87,12 +91,27 @@ static void get_system_info(unsigned int info_mask, char *output_buffer)
         strcat(output_buffer, logo[current_logo_row++]);
         strcat(output_buffer, releaseInfo);
     }
-    char CPUModel[64] = "";
+    char CPUModel[4096] = "";
+    struct file* file;
+    file = filp_open("/proc/cpuinfo", O_RDONLY, 0);
+    if(!file){
+        pr_alert("Failed to open\n");
+        return ;
+    }
+    int len = kernel_read(file, CPUModel, sizeof(CPUModel), &file->f_pos);
+    char* model_name_start = strstr(CPUModel, "model name");
+    model_name_start = strchr(model_name_start, ':') + 1;
+    while(*model_name_start == ' ') model_name_start++;
+    char *model_name_end = strchr(model_name_start, '\n');
+    *model_name_end = 0;
+    filp_close(file, NULL);
     if (mask_info & KFETCH_CPU_MODEL) {
         pr_info("CPU Model information\n");
-        snprintf(CPUModel, 64, "CPU:      Intel(R) Pentium(R) Gold G5400 CPU @ 3.70GHz\n");
+        // snprintf(CPUModel, 64, "CPU:      %s\n", CPUModel);
         strcat(output_buffer, logo[current_logo_row++]);
-        strcat(output_buffer, CPUModel);
+        strcat(output_buffer, "CPU:      ");
+        strncat(output_buffer, model_name_start, strlen(model_name_start));
+        strcat(output_buffer, "\n");
     }
     int online_cpu = num_online_cpus();
     int possible_cpus = num_possible_cpus();
